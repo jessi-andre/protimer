@@ -71,6 +71,14 @@
           </div>
           <button type="submit" class="btn-primary">Crear Cuenta</button>
         </form>
+
+        <div class="guest-option">
+          <button class="btn-guest" id="continueAsGuest">
+            <i class="fas fa-user-clock"></i>
+            <span>Continuar sin cuenta</span>
+          </button>
+          <p class="guest-info">Podrás registrarte después si quieres guardar tus datos</p>
+        </div>
       </div>
     </div>
   </div>
@@ -101,13 +109,17 @@
   <div class="app">
     <!-- Header con controles de tema y modo -->
     <div class="header">
-      <div class="user-info">
+      <div class="user-info" id="userInfoSection" style="display: none;">
         <i class="fas fa-user-circle"></i>
         <span id="userName"></span>
         <button class="logout-btn" id="logoutBtn" title="Cerrar sesión">
           <i class="fas fa-sign-out-alt"></i>
         </button>
       </div>
+      <button class="login-prompt-btn" id="loginPromptBtn">
+        <i class="fas fa-user"></i>
+        <span>Iniciar Sesión</span>
+      </button>
       <div class="mode-toggle">
         <button class="mode-btn active" data-mode="stopwatch">
           <i class="fas fa-stopwatch"></i>

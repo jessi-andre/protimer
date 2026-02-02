@@ -1,10 +1,17 @@
 // ==================== SISTEMA DE USUARIOS ====================
 let currentUser = null;
+let isGuest = false;
 
 function initAuth() {
   const savedUser = localStorage.getItem('currentUser');
+  const guestMode = localStorage.getItem('guestMode');
+  
   if (savedUser) {
     currentUser = JSON.parse(savedUser);
+    isGuest = false;
+    showApp();
+  } else if (guestMode === 'true') {
+    isGuest = true;
     showApp();
   } else {
     showAuthModal();
@@ -21,10 +28,30 @@ function hideAuthModal() {
 
 function showApp() {
   hideAuthModal();
-  document.getElementById('userName').textContent = currentUser.name;
-  loadUserData();
-  updateStats();
+  
+  if (isGuest) {
+    document.getElementById('userInfoSection').style.display = 'none';
+    document.getElementById('loginPromptBtn').style.display = 'flex';
+  } else {
+    document.getElementById('userInfoSection').style.display = 'flex';
+    document.getElementById('loginPromptBtn').style.display = 'none';
+    document.getElementById('userName').textContent = currentUser.name;
+    loadUserData();
+    updateStats();
+  }
 }
+
+// Continuar como invitado
+document.getElementById('continueAsGuest').addEventListener('click', () => {
+  isGuest = true;
+  localStorage.setItem('guestMode', 'true');
+  showApp();
+});
+
+// Mostrar modal de login cuando el invitado quiere registrarse
+document.getElementById('loginPromptBtn').addEventListener('click', () => {
+  showAuthModal();
+});
 
 // Tabs de autenticación
 document.querySelectorAll('.auth-tab').forEach(tab => {
@@ -48,7 +75,9 @@ document.getElementById('loginForm').addEventListener('submit', (e) => {
   
   if (user && user.password === password) {
     currentUser = { username, name: user.name };
+    isGuest = false;
     localStorage.setItem('currentUser', JSON.stringify(currentUser));
+    localStorage.removeItem('guestMode');
     showApp();
   } else {
     alert('Usuario o contraseña incorrectos');
@@ -73,7 +102,9 @@ document.getElementById('registerForm').addEventListener('submit', (e) => {
   localStorage.setItem('users', JSON.stringify(users));
   
   currentUser = { username, name };
+  isGuest = false;
   localStorage.setItem('currentUser', JSON.stringify(currentUser));
+  localStorage.removeItem('guestMode');
   showApp();
 });
 
@@ -366,6 +397,16 @@ function updateLapStats() {
 
 // ==================== GUARDAR SESIONES ====================
 function openSaveModal() {
+  // Si es invitado, preguntar si quiere registrarse
+  if (isGuest) {
+    if (confirm('Para guardar tus sesiones necesitas crear una cuenta. ¿Quieres registrarte ahora?')) {
+      showAuthModal();
+      // Cambiar a la pestaña de registro
+      document.querySelector('[data-tab="register"]').click();
+    }
+    return;
+  }
+  
   document.getElementById('saveSessionModal').classList.remove('hidden');
 }
 
@@ -398,15 +439,34 @@ document.getElementById('saveSessionForm').addEventListener('submit', (e) => {
   
   closeSaveModal();
   document.getElementById('activityName').value = '';
-  document.getElementById('sessionNotes').value = '';
+  if (isGuest) {
+    renderSessions([]);
+    renderGoals([]);
+    return;
+  }
   
-  alert('¡Sesión guardada!');
-  reset();
-  loadUserData();
-  updateStats();
-});
+  const sessions = JSON.parse(localStorage.getItem('sessions') || '[]');
+  const userSessions = sessions.filter(s => s.username === currentUser.username);
+  
+  renderSessions(userSessions);
+  loadGoals();
+}
 
-// ==================== HISTORIAL ====================
+function renderSessions(sessions) {
+  const sessionsList = document.getElementById('sessionsList');
+  
+  if (isGuest) {
+    sessionsList.innerHTML = `
+      <div style="text-align: center; padding: 60px 20px;">
+        <i class="fas fa-user-lock" style="font-size: 48px; color: var(--text-secondary); margin-bottom: 16px;"></i>
+        <p style="color: var(--text-secondary); margin-bottom: 20px;">Regístrate para guardar y ver tu historial</p>
+        <button class="btn-primary" onclick="document.getElementById('loginPromptBtn').click()">
+          Crear Cuenta
+        </button>
+      </div>
+    `;
+    return;
+  }
 function loadUserData() {
   const sessions = JSON.parse(localStorage.getItem('sessions') || '[]');
   const userSessions = sessions.filter(s => s.username === currentUser.username);
@@ -444,14 +504,32 @@ function renderSessions(sessions) {
           </div>
           ${session.notes ? `<div class="session-notes">${session.notes}</div>` : ''}
         </div>
-      `;
-    })
-    .join('');
+  if (isGuest) {
+    renderGoals([]);
+    return;
+  }
+  
+  const goals = JSON.parse(localStorage.getItem('goals') || '[]');
+  const userGoals = goals.filter(g => g.username === currentUser.username);
+  
+  renderGoals(userGoals);
 }
 
-function deleteSession(id) {
-  if (!confirm('¿Eliminar esta sesión?')) return;
+function renderGoals(goals) {
+  const goalsList = document.getElementById('goalsList');
   
+  if (isGuest) {
+    goalsList.innerHTML = `
+      <div style="text-align: center; padding: 60px 20px;">
+        <i class="fas fa-bullseye" style="font-size: 48px; color: var(--text-secondary); margin-bottom: 16px;"></i>
+        <p style="color: var(--text-secondary); margin-bottom: 20px;">Regístrate para crear y seguir tus metas</p>
+        <button class="btn-primary" onclick="document.getElementById('loginPromptBtn').click()">
+          Crear Cuenta
+        </button>
+      </div>
+    `;
+    return;
+  }
   let sessions = JSON.parse(localStorage.getItem('sessions') || '[]');
   sessions = sessions.filter(s => s.id !== id);
   localStorage.setItem('sessions', JSON.stringify(sessions));
@@ -484,6 +562,14 @@ function renderGoals(goals) {
   
   if (goals.length === 0) {
     goalsList.innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 40px;">No hay metas creadas</p>';
+    return;
+  }
+  
+  if (isGuest) {
+    if (confirm('Para crear metas necesitas crear una cuenta. ¿Quieres registrarte ahora?')) {
+      showAuthModal();
+      document.querySelector('[data-tab="register"]').click();
+    }
     return;
   }
   
@@ -526,6 +612,14 @@ function renderGoals(goals) {
 document.getElementById('addGoalBtn').addEventListener('click', () => {
   const title = prompt('Nombre de la meta:');
   if (!title) return;
+  
+  if (isGuest) {
+    document.getElementById('totalSessions').textContent = '0';
+    document.getElementById('totalTime').textContent = '0h';
+    document.getElementById('streak').textContent = '0 días';
+    document.getElementById('goalsCompleted').textContent = '0';
+    return;
+  }
   
   const type = confirm('¿Meta basada en sesiones? (Cancelar = basada en tiempo)') ? 'sessions' : 'duration';
   let target, description;
