@@ -344,32 +344,20 @@ function loadState() {
   
   try {
     const state = JSON.parse(saved);
-    mode = state.mode || 'stopwatch';
-    elapsed = state.elapsed || 0;
-    laps = state.laps || [];
-    timerDuration = state.timerDuration || 0;
-    timerRemaining = state.timerRemaining || 0;
+    
+    // NO cargar el modo, siempre iniciar en cronómetro
+    // mode = state.mode || 'stopwatch';
+    
+    // NO cargar estados guardados para empezar limpio
+    elapsed = 0;
+    laps = [];
+    timerDuration = 0;
+    timerRemaining = 0;
     
     if (state.hours) hoursInput.value = state.hours;
     if (state.minutes) minutesInput.value = state.minutes;
     if (state.seconds) secondsInput.value = state.seconds;
     
-    switchMode(mode);
-    
-    if (elapsed > 0) {
-      timeEl.textContent = formatTime(elapsed);
-      millisecondsEl.textContent = formatMilliseconds(elapsed);
-    }
-    
-    if (timerRemaining > 0 && mode === 'timer') {
-      timeEl.textContent = formatTime(timerRemaining);
-      millisecondsEl.textContent = formatMilliseconds(timerRemaining);
-    }
-    
-    if (laps.length > 0) {
-      renderLaps();
-      updateLapStats();
-    }
   } catch (e) {
     console.error('Error loading state:', e);
   }
@@ -487,7 +475,11 @@ window.addEventListener('appinstalled', () => {
 });
 
 // ==================== INICIALIZACIÓN ====================
-// Siempre iniciar en tema oscuro
+
+// Cargar estado guardado (solo inputs)
+loadState();
+
+// Siempre iniciar en tema oscuro DESPUÉS de cargar estado
 document.documentElement.setAttribute('data-theme', 'dark');
 themeToggle.querySelector('i').className = 'fas fa-moon';
 
@@ -495,9 +487,6 @@ themeToggle.querySelector('i').className = 'fas fa-moon';
 if ('Notification' in window && Notification.permission === 'default') {
   Notification.requestPermission();
 }
-
-// Cargar estado guardado
-loadState();
 
 // Deshabilitar botón de vuelta inicialmente
 lapBtn.disabled = true;
