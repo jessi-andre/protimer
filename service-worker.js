@@ -1,4 +1,4 @@
-const CACHE_NAME = 'protimer-v1';
+const CACHE_NAME = 'protimer-v2';
 const urlsToCache = [
   './',
   './index.html',
@@ -10,6 +10,7 @@ const urlsToCache = [
 
 // Instalación del Service Worker
 self.addEventListener('install', event => {
+  self.skipWaiting(); // Forzar activación inmediata
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => cache.addAll(urlsToCache))
@@ -27,7 +28,7 @@ self.addEventListener('activate', event => {
           }
         })
       );
-    })
+    }).then(() => self.clients.claim()) // Tomar control inmediato
   );
 });
 
