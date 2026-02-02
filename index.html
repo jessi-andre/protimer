@@ -32,11 +32,41 @@
     <div class="particle"></div>
   </div>
 
+  <!-- Modal de Bienvenida -->
+  <div class="modal-overlay" id="welcomeModal">
+    <div class="modal welcome-modal">
+      <div class="welcome-content">
+        <div class="welcome-icon">⏱️</div>
+        <h1>ProTimer</h1>
+        <p class="welcome-subtitle">Cronómetro profesional con vueltas, metas y estadísticas</p>
+        
+        <div class="welcome-buttons">
+          <button class="btn-welcome-primary" id="startNowBtn">
+            <i class="fas fa-rocket"></i>
+            <span>Usar Ahora</span>
+            <small>Sin registro, comienza de inmediato</small>
+          </button>
+          
+          <button class="btn-welcome-secondary" id="registerNowBtn">
+            <i class="fas fa-user-plus"></i>
+            <span>Registrarme</span>
+            <small>Guarda tu progreso y crea metas</small>
+          </button>
+        </div>
+        
+        <button class="welcome-login-link" id="alreadyHaveAccountBtn">
+          ¿Ya tienes cuenta? Inicia sesión
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Modal de Login/Registro -->
-  <div class="modal-overlay" id="authModal">
+  <div class="modal-overlay hidden" id="authModal">
     <div class="modal">
       <div class="modal-header">
         <h2 id="authTitle">Bienvenido a ProTimer</h2>
+        <button class="modal-close" onclick="closeAuthModal()">×</button>
       </div>
       <div class="modal-body">
         <div class="auth-tabs">
@@ -71,14 +101,6 @@
           </div>
           <button type="submit" class="btn-primary">Crear Cuenta</button>
         </form>
-
-        <div class="guest-option">
-          <button class="btn-guest" id="continueAsGuest">
-            <i class="fas fa-user-clock"></i>
-            <span>Continuar sin cuenta</span>
-          </button>
-          <p class="guest-info">Podrás registrarte después si quieres guardar tus datos</p>
-        </div>
       </div>
     </div>
   </div>

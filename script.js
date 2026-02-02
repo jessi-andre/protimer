@@ -14,8 +14,16 @@ function initAuth() {
     isGuest = true;
     showApp();
   } else {
-    showAuthModal();
+    showWelcomeModal();
   }
+}
+
+function showWelcomeModal() {
+  document.getElementById('welcomeModal').classList.remove('hidden');
+}
+
+function hideWelcomeModal() {
+  document.getElementById('welcomeModal').classList.add('hidden');
 }
 
 function showAuthModal() {
@@ -26,7 +34,15 @@ function hideAuthModal() {
   document.getElementById('authModal').classList.add('hidden');
 }
 
+function closeAuthModal() {
+  hideAuthModal();
+  if (!currentUser && !isGuest) {
+    showWelcomeModal();
+  }
+}
+
 function showApp() {
+  hideWelcomeModal();
   hideAuthModal();
   
   if (isGuest) {
@@ -41,11 +57,27 @@ function showApp() {
   }
 }
 
-// Continuar como invitado
-document.getElementById('continueAsGuest').addEventListener('click', () => {
+// Botón "Usar Ahora"
+document.getElementById('startNowBtn').addEventListener('click', () => {
   isGuest = true;
   localStorage.setItem('guestMode', 'true');
   showApp();
+});
+
+// Botón "Registrarme"
+document.getElementById('registerNowBtn').addEventListener('click', () => {
+  hideWelcomeModal();
+  showAuthModal();
+  // Cambiar a la pestaña de registro
+  document.querySelector('[data-tab="register"]').click();
+});
+
+// Link "Ya tienes cuenta"
+document.getElementById('alreadyHaveAccountBtn').addEventListener('click', () => {
+  hideWelcomeModal();
+  showAuthModal();
+  // Cambiar a la pestaña de login
+  document.querySelector('[data-tab="login"]').click();
 });
 
 // Mostrar modal de login cuando el invitado quiere registrarse
