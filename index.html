@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Cronómetro y temporizador profesional con vueltas, estadísticas y modo offline" />
+  <meta name="theme-color" content="#667eea" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="ProTimer" />
+  
+  <title>ProTimer - Cronómetro Profesional</title>
+  
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="manifest.json" />
+  
+  <!-- Icons -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>⏱️</text></svg>" />
+  
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+</head>
+
+<body>
+  <!-- Partículas de fondo -->
+  <div class="particles">
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+  </div>
+
+  <div class="app">
+    <!-- Header con controles de tema y modo -->
+    <div class="header">
+      <div class="mode-toggle">
+        <button class="mode-btn active" data-mode="stopwatch">
+          <i class="fas fa-stopwatch"></i>
+          <span>Cronómetro</span>
+        </button>
+        <button class="mode-btn" data-mode="timer">
+          <i class="fas fa-clock"></i>
+          <span>Temporizador</span>
+        </button>
+      </div>
+      <button class="theme-toggle" id="themeToggle">
+        <i class="fas fa-moon"></i>
+      </button>
+    </div>
+
+    <!-- Display principal del tiempo -->
+    <div class="time-display">
+      <div class="time-wrapper">
+        <div id="time" class="time">00:00:00</div>
+        <div id="milliseconds" class="milliseconds">.000</div>
+      </div>
+      <div class="progress-ring">
+        <svg width="340" height="340">
+          <circle cx="170" cy="170" r="160" class="progress-ring-circle"></circle>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Configuración del temporizador (oculto por defecto) -->
+    <div class="timer-setup" id="timerSetup">
+      <div class="time-inputs">
+        <div class="input-group">
+          <input type="number" id="hoursInput" min="0" max="23" value="0" />
+          <label>Horas</label>
+        </div>
+        <span class="separator">:</span>
+        <div class="input-group">
+          <input type="number" id="minutesInput" min="0" max="59" value="5" />
+          <label>Minutos</label>
+        </div>
+        <span class="separator">:</span>
+        <div class="input-group">
+          <input type="number" id="secondsInput" min="0" max="59" value="0" />
+          <label>Segundos</label>
+        </div>
+      </div>
+      <button class="preset-btn" data-time="300">5 min</button>
+      <button class="preset-btn" data-time="600">10 min</button>
+      <button class="preset-btn" data-time="900">15 min</button>
+      <button class="preset-btn" data-time="1800">30 min</button>
+    </div>
+
+    <!-- Controles principales -->
+    <div class="controls">
+      <button class="control-btn reset-btn" id="reset">
+        <i class="fas fa-redo"></i>
+        <span>Reiniciar</span>
+      </button>
+      <button class="control-btn start-btn" id="startPause">
+        <i class="fas fa-play"></i>
+        <span>Iniciar</span>
+      </button>
+      <button class="control-btn lap-btn" id="lap">
+        <i class="fas fa-flag"></i>
+        <span>Vuelta</span>
+      </button>
+    </div>
+
+    <!-- Lista de vueltas -->
+    <div class="laps-section" id="lapsSection">
+      <div class="laps-header">
+        <h3>Vueltas</h3>
+        <div class="laps-stats">
+          <span class="stat">
+            <i class="fas fa-tachometer-alt"></i>
+            <span id="avgLap">00:00.000</span>
+          </span>
+          <span class="stat">
+            <i class="fas fa-crown"></i>
+            <span id="bestLap">00:00.000</span>
+          </span>
+        </div>
+      </div>
+      <div class="laps-list" id="lapsList"></div>
+    </div>
+  </div>
+
+  <!-- Audio para notificaciones -->
+  <audio id="beepSound">
+    <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZijcIGWi77+ifTRAMUKfj8LZjHAY4ktjyyXorBSR3yPDdkUAKFF+16OumWBQLRp/g8r1rIQUsgs/y1o42CBlou+7onkwQC0+m4+60ZRwFN5HY88p5KwUkdsjv3I9AChRftejqpVkVCkWe4PG9ayEFL4PQ8tWONggZabzv6aVQEAxPp+Tut2YdBjiR2PTLfC0GI3bI8N+RQgoUX7Xn6qVaFgpFnuDyvGsgBS+E0fPVjzgJGWm98OqmUhAMT6fl77dmHAU4kdj0zH0tBiN2yO/fkkILFF+15+qmWhYKRZzf8r1rHwUug9Hy1o87CRlqvfHsqVQRDFCo5fC5aB0GOJLe9MyALwYjd8nx35JCChNfsufqp1sXC0We3/K9ax8FLoTR8tWOOQkaab3x66hVEQxQqOXvuWgcBjeV3vXNgS8GI3fJ8d+SQwoTX7Ln6qdcFwtGnt/xvWofBS6E0fLWjzgJGWm88eqqVhEMUKjl77ppHQY3ld71zYEvBiN3yfDfkkQKE1+y5+qnXBcLRp/g8b1qHgUtg9Hy1Y85CRlpvPHqqVYQDFCo5e+6aR0GN5Xf9cyALgYjd8nw35JEChNfsufqp1wXC0af4PG9ah4FLYPRz9aPOQkaabzx6qlWEAxQqeXvumgdBjeV3/XMgC8GI3fJ8N+SQgoTX7Ln6qdcFwtGn+Dxvmkd"></source>
+  </audio>
+
+  <script src="script.js"></script>
+  <script>
+    // Registrar Service Worker para PWA
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./service-worker.js')
+        .then(() => console.log('✅ PWA habilitada'))
+        .catch(err => console.log('⚠️ Service Worker error:', err));
+    }
+  </script>
+</body>
+</html>

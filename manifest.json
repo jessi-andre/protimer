@@ -1,0 +1,24 @@
+{
+  "name": "ProTimer - Cronómetro Profesional",
+  "short_name": "ProTimer",
+  "description": "Cronómetro y temporizador profesional con vueltas y estadísticas",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0a0e27",
+  "theme_color": "#667eea",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><defs><linearGradient id='grad' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' style='stop-color:%23667eea'/><stop offset='100%' style='stop-color:%23764ba2'/></linearGradient></defs><rect fill='url(%23grad)' width='192' height='192' rx='48'/><text x='96' y='130' font-size='80' text-anchor='middle' fill='white' font-family='Arial'>⏱️</text></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><defs><linearGradient id='grad' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' style='stop-color:%23667eea'/><stop offset='100%' style='stop-color:%23764ba2'/></linearGradient></defs><rect fill='url(%23grad)' width='512' height='512' rx='128'/><text x='256' y='350' font-size='220' text-anchor='middle' fill='white' font-family='Arial'>⏱️</text></svg>",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
