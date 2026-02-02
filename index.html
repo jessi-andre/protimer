@@ -31,9 +31,82 @@
     <div class="particle"></div>
   </div>
 
+  <!-- Modal de Login/Registro -->
+  <div class="modal-overlay" id="authModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="authTitle">Bienvenido a ProTimer</h2>
+      </div>
+      <div class="modal-body">
+        <div class="auth-tabs">
+          <button class="auth-tab active" data-tab="login">Iniciar Sesión</button>
+          <button class="auth-tab" data-tab="register">Registrarse</button>
+        </div>
+        
+        <form id="loginForm" class="auth-form active">
+          <div class="form-group">
+            <label>Usuario</label>
+            <input type="text" id="loginUsername" required />
+          </div>
+          <div class="form-group">
+            <label>Contraseña</label>
+            <input type="password" id="loginPassword" required />
+          </div>
+          <button type="submit" class="btn-primary">Entrar</button>
+        </form>
+
+        <form id="registerForm" class="auth-form">
+          <div class="form-group">
+            <label>Nombre</label>
+            <input type="text" id="registerName" required />
+          </div>
+          <div class="form-group">
+            <label>Usuario</label>
+            <input type="text" id="registerUsername" required />
+          </div>
+          <div class="form-group">
+            <label>Contraseña</label>
+            <input type="password" id="registerPassword" required />
+          </div>
+          <button type="submit" class="btn-primary">Crear Cuenta</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Guardar Sesión -->
+  <div class="modal-overlay" id="saveSessionModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>Guardar Sesión</h2>
+        <button class="modal-close" onclick="closeSaveModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <form id="saveSessionForm">
+          <div class="form-group">
+            <label>Actividad</label>
+            <input type="text" id="activityName" placeholder="Ej: Correr, Entrenar, Estudiar" required />
+          </div>
+          <div class="form-group">
+            <label>Notas (opcional)</label>
+            <textarea id="sessionNotes" rows="3" placeholder="¿Cómo te fue?"></textarea>
+          </div>
+          <button type="submit" class="btn-primary">Guardar</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
   <div class="app">
     <!-- Header con controles de tema y modo -->
     <div class="header">
+      <div class="user-info">
+        <i class="fas fa-user-circle"></i>
+        <span id="userName"></span>
+        <button class="logout-btn" id="logoutBtn" title="Cerrar sesión">
+          <i class="fas fa-sign-out-alt"></i>
+        </button>
+      </div>
       <div class="mode-toggle">
         <button class="mode-btn active" data-mode="stopwatch">
           <i class="fas fa-stopwatch"></i>
@@ -102,6 +175,12 @@
       </button>
     </div>
 
+    <!-- Botón de Guardar Sesión -->
+    <button class="save-session-btn" id="saveSessionBtn" style="display: none;">
+      <i class="fas fa-save"></i>
+      <span>Guardar Sesión</span>
+    </button>
+
     <!-- Lista de vueltas -->
     <div class="laps-section" id="lapsSection">
       <div class="laps-header">
@@ -118,6 +197,80 @@
         </div>
       </div>
       <div class="laps-list" id="lapsList"></div>
+    </div>
+
+    <!-- Tabs de Historial y Metas -->
+    <div class="tabs-section">
+      <div class="tabs-nav">
+        <button class="tab-btn" data-tab="history">
+          <i class="fas fa-history"></i>
+          <span>Historial</span>
+        </button>
+        <button class="tab-btn" data-tab="goals">
+          <i class="fas fa-bullseye"></i>
+          <span>Metas</span>
+        </button>
+        <button class="tab-btn" data-tab="stats">
+          <i class="fas fa-chart-line"></i>
+          <span>Estadísticas</span>
+        </button>
+      </div>
+
+      <!-- Tab de Historial -->
+      <div class="tab-content" id="historyTab">
+        <div class="section-header">
+          <h3>Sesiones Guardadas</h3>
+          <button class="btn-clear" id="clearHistory">
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
+        <div id="sessionsList" class="sessions-list"></div>
+      </div>
+
+      <!-- Tab de Metas -->
+      <div class="tab-content" id="goalsTab">
+        <div class="section-header">
+          <h3>Mis Metas</h3>
+          <button class="btn-add" id="addGoalBtn">
+            <i class="fas fa-plus"></i>
+          </button>
+        </div>
+        <div id="goalsList" class="goals-list"></div>
+      </div>
+
+      <!-- Tab de Estadísticas -->
+      <div class="tab-content" id="statsTab">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <i class="fas fa-running"></i>
+            <div class="stat-info">
+              <span class="stat-label">Total Sesiones</span>
+              <span class="stat-value" id="totalSessions">0</span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <i class="fas fa-clock"></i>
+            <div class="stat-info">
+              <span class="stat-label">Tiempo Total</span>
+              <span class="stat-value" id="totalTime">0h</span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <i class="fas fa-fire"></i>
+            <div class="stat-info">
+              <span class="stat-label">Racha</span>
+              <span class="stat-value" id="streak">0 días</span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <i class="fas fa-trophy"></i>
+            <div class="stat-info">
+              <span class="stat-label">Metas Logradas</span>
+              <span class="stat-value" id="goalsCompleted">0</span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 

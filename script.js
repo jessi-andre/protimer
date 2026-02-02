@@ -1,5 +1,92 @@
+// ==================== SISTEMA DE USUARIOS ====================
+let currentUser = null;
+
+function initAuth() {
+  const savedUser = localStorage.getItem('currentUser');
+  if (savedUser) {
+    currentUser = JSON.parse(savedUser);
+    showApp();
+  } else {
+    showAuthModal();
+  }
+}
+
+function showAuthModal() {
+  document.getElementById('authModal').classList.remove('hidden');
+}
+
+function hideAuthModal() {
+  document.getElementById('authModal').classList.add('hidden');
+}
+
+function showApp() {
+  hideAuthModal();
+  document.getElementById('userName').textContent = currentUser.name;
+  loadUserData();
+  updateStats();
+}
+
+// Tabs de autenticación
+document.querySelectorAll('.auth-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    const tabName = tab.dataset.tab;
+    document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById(tabName + 'Form').classList.add('active');
+  });
+});
+
+// Login
+document.getElementById('loginForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const username = document.getElementById('loginUsername').value;
+  const password = document.getElementById('loginPassword').value;
+  
+  const users = JSON.parse(localStorage.getItem('users') || '{}');
+  const user = users[username];
+  
+  if (user && user.password === password) {
+    currentUser = { username, name: user.name };
+    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+    showApp();
+  } else {
+    alert('Usuario o contraseña incorrectos');
+  }
+});
+
+// Registro
+document.getElementById('registerForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const name = document.getElementById('registerName').value;
+  const username = document.getElementById('registerUsername').value;
+  const password = document.getElementById('registerPassword').value;
+  
+  const users = JSON.parse(localStorage.getItem('users') || '{}');
+  
+  if (users[username]) {
+    alert('El usuario ya existe');
+    return;
+  }
+  
+  users[username] = { name, password };
+  localStorage.setItem('users', JSON.stringify(users));
+  
+  currentUser = { username, name };
+  localStorage.setItem('currentUser', JSON.stringify(currentUser));
+  showApp();
+});
+
+// Logout
+document.getElementById('logoutBtn').addEventListener('click', () => {
+  if (confirm('¿Cerrar sesión?')) {
+    localStorage.removeItem('currentUser');
+    location.reload();
+  }
+});
+
 // ==================== ESTADO GLOBAL ====================
-let mode = 'stopwatch'; // 'stopwatch' o 'timer'
+let mode = 'stopwatch';
 let startTime = null;
 let elapsed = 0;
 let timerInterval = null;
@@ -7,6 +94,7 @@ let isRunning = false;
 let laps = [];
 let timerDuration = 0;
 let timerRemaining = 0;
+let sessionStartTime = null;
 
 // ==================== ELEMENTOS DOM ====================
 const timeEl = document.getElementById("time");
@@ -27,6 +115,7 @@ const secondsInput = document.getElementById("secondsInput");
 const presetButtons = document.querySelectorAll(".preset-btn");
 const beepSound = document.getElementById("beepSound");
 const progressCircle = document.querySelector(".progress-ring-circle");
+const saveSessionBtn = document.getElementById("saveSessionBtn");
 
 // ==================== FORMATO DE TIEMPO ====================
 function formatTime(ms) {
@@ -50,6 +139,13 @@ function formatLapTime(ms) {
   const milliseconds = ms % 1000;
   
   return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}.${String(milliseconds).padStart(3, "0")}`;
+}
+
+function formatDuration(ms) {
+  const hours = Math.floor(ms / 3600000);
+  const minutes = Math.floor((ms % 3600000) / 60000);
+  if (hours > 0) return `${hours}h ${minutes}m`;
+  return `${minutes}m`;
 }
 
 // ==================== ACTUALIZACIÓN DEL DISPLAY ====================
@@ -80,13 +176,11 @@ function updateProgressRing(current, total = null) {
   const circumference = 2 * Math.PI * radius;
   
   if (total) {
-    // Modo temporizador
     const progress = current / total;
     const offset = circumference * (1 - progress);
     progressCircle.style.strokeDashoffset = offset;
   } else {
-    // Modo cronómetro - animación infinita
-    const progress = (current / 60000) % 1; // Ciclo cada 60 segundos
+    const progress = (current / 60000) % 1;
     const offset = circumference * (1 - progress);
     progressCircle.style.strokeDashoffset = offset;
   }
@@ -107,18 +201,19 @@ function start() {
     }
   }
   
+  if (!sessionStartTime) {
+    sessionStartTime = Date.now();
+  }
+  
   startTime = Date.now();
   timerInterval = setInterval(updateDisplay, 10);
   isRunning = true;
   
-  // UI Updates
   startPauseBtn.classList.add('running');
   startPauseBtn.querySelector('i').className = 'fas fa-pause';
   startPauseBtn.querySelector('span').textContent = 'Pausar';
   lapBtn.disabled = false;
   timeEl.classList.add('running');
-  
-  saveState();
 }
 
 function pause() {
@@ -133,13 +228,15 @@ function pause() {
   
   isRunning = false;
   
-  // UI Updates
   startPauseBtn.classList.remove('running');
   startPauseBtn.querySelector('i').className = 'fas fa-play';
   startPauseBtn.querySelector('span').textContent = 'Continuar';
   timeEl.classList.remove('running');
   
-  saveState();
+  // Mostrar botón de guardar si hay datos
+  if (mode === 'stopwatch' && elapsed > 0) {
+    saveSessionBtn.style.display = 'flex';
+  }
 }
 
 function reset() {
@@ -150,11 +247,11 @@ function reset() {
   isRunning = false;
   laps = [];
   timerRemaining = 0;
+  sessionStartTime = null;
   
   timeEl.textContent = "00:00:00";
   millisecondsEl.textContent = ".000";
   
-  // UI Updates
   startPauseBtn.classList.remove('running');
   startPauseBtn.querySelector('i').className = 'fas fa-play';
   startPauseBtn.querySelector('span').textContent = 'Iniciar';
@@ -163,8 +260,7 @@ function reset() {
   lapsList.innerHTML = '';
   timeEl.classList.remove('running');
   progressCircle.style.strokeDashoffset = 1005;
-  
-  saveState();
+  saveSessionBtn.style.display = 'none';
 }
 
 function completeTimer() {
@@ -176,21 +272,17 @@ function completeTimer() {
   timeEl.textContent = "00:00:00";
   millisecondsEl.textContent = ".000";
   
-  // Reproducir sonido
   beepSound.play().catch(() => {});
   
-  // Notificación visual
   document.body.style.animation = 'flash 0.5s ease 3';
   setTimeout(() => {
     document.body.style.animation = '';
   }, 1500);
   
-  // UI Updates
   startPauseBtn.classList.remove('running');
   startPauseBtn.querySelector('i').className = 'fas fa-play';
   startPauseBtn.querySelector('span').textContent = 'Iniciar';
   
-  // Mostrar notificación
   if ('Notification' in window && Notification.permission === 'granted') {
     new Notification('¡Tiempo completado!', {
       body: 'El temporizador ha finalizado',
@@ -215,8 +307,6 @@ function recordLap() {
   renderLaps();
   updateLapStats();
   lapsSection.classList.add('active');
-  
-  saveState();
 }
 
 function renderLaps() {
@@ -225,7 +315,6 @@ function renderLaps() {
     return;
   }
   
-  // Encontrar la vuelta más rápida y más lenta
   const lapTimes = laps.map(l => l.lapTime);
   const fastest = Math.min(...lapTimes);
   const slowest = Math.max(...lapTimes);
@@ -275,6 +364,284 @@ function updateLapStats() {
   bestLapEl.textContent = formatLapTime(best);
 }
 
+// ==================== GUARDAR SESIONES ====================
+function openSaveModal() {
+  document.getElementById('saveSessionModal').classList.remove('hidden');
+}
+
+function closeSaveModal() {
+  document.getElementById('saveSessionModal').classList.add('hidden');
+}
+
+saveSessionBtn.addEventListener('click', openSaveModal);
+
+document.getElementById('saveSessionForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  
+  const activity = document.getElementById('activityName').value;
+  const notes = document.getElementById('sessionNotes').value;
+  
+  const session = {
+    id: Date.now(),
+    username: currentUser.username,
+    activity,
+    notes,
+    duration: elapsed,
+    laps: [...laps],
+    date: new Date().toISOString(),
+    mode: mode
+  };
+  
+  const sessions = JSON.parse(localStorage.getItem('sessions') || '[]');
+  sessions.push(session);
+  localStorage.setItem('sessions', JSON.stringify(sessions));
+  
+  closeSaveModal();
+  document.getElementById('activityName').value = '';
+  document.getElementById('sessionNotes').value = '';
+  
+  alert('¡Sesión guardada!');
+  reset();
+  loadUserData();
+  updateStats();
+});
+
+// ==================== HISTORIAL ====================
+function loadUserData() {
+  const sessions = JSON.parse(localStorage.getItem('sessions') || '[]');
+  const userSessions = sessions.filter(s => s.username === currentUser.username);
+  
+  renderSessions(userSessions);
+  loadGoals();
+}
+
+function renderSessions(sessions) {
+  const sessionsList = document.getElementById('sessionsList');
+  
+  if (sessions.length === 0) {
+    sessionsList.innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 40px;">No hay sesiones guardadas</p>';
+    return;
+  }
+  
+  sessionsList.innerHTML = sessions
+    .sort((a, b) => b.date - a.date)
+    .map(session => {
+      const date = new Date(session.date);
+      return `
+        <div class="session-item">
+          <div class="session-header">
+            <div>
+              <div class="session-title">${session.activity}</div>
+              <div class="session-date">${date.toLocaleDateString()} - ${date.toLocaleTimeString()}</div>
+            </div>
+            <button class="session-delete" onclick="deleteSession(${session.id})">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+          <div class="session-details">
+            <span><i class="fas fa-clock"></i>${formatDuration(session.duration)}</span>
+            <span><i class="fas fa-flag"></i>${session.laps.length} vueltas</span>
+          </div>
+          ${session.notes ? `<div class="session-notes">${session.notes}</div>` : ''}
+        </div>
+      `;
+    })
+    .join('');
+}
+
+function deleteSession(id) {
+  if (!confirm('¿Eliminar esta sesión?')) return;
+  
+  let sessions = JSON.parse(localStorage.getItem('sessions') || '[]');
+  sessions = sessions.filter(s => s.id !== id);
+  localStorage.setItem('sessions', JSON.stringify(sessions));
+  
+  loadUserData();
+  updateStats();
+}
+
+document.getElementById('clearHistory').addEventListener('click', () => {
+  if (!confirm('¿Eliminar todo el historial? Esta acción no se puede deshacer.')) return;
+  
+  let sessions = JSON.parse(localStorage.getItem('sessions') || '[]');
+  sessions = sessions.filter(s => s.username !== currentUser.username);
+  localStorage.setItem('sessions', JSON.stringify(sessions));
+  
+  loadUserData();
+  updateStats();
+});
+
+// ==================== METAS ====================
+function loadGoals() {
+  const goals = JSON.parse(localStorage.getItem('goals') || '[]');
+  const userGoals = goals.filter(g => g.username === currentUser.username);
+  
+  renderGoals(userGoals);
+}
+
+function renderGoals(goals) {
+  const goalsList = document.getElementById('goalsList');
+  
+  if (goals.length === 0) {
+    goalsList.innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 40px;">No hay metas creadas</p>';
+    return;
+  }
+  
+  const sessions = JSON.parse(localStorage.getItem('sessions') || '[]');
+  const userSessions = sessions.filter(s => s.username === currentUser.username);
+  
+  goalsList.innerHTML = goals.map(goal => {
+    let progress = 0;
+    
+    if (goal.type === 'sessions') {
+      progress = (userSessions.length / goal.target) * 100;
+    } else if (goal.type === 'duration') {
+      const totalDuration = userSessions.reduce((sum, s) => sum + s.duration, 0);
+      progress = (totalDuration / goal.target) * 100;
+    }
+    
+    progress = Math.min(progress, 100);
+    const completed = progress >= 100;
+    
+    return `
+      <div class="goal-item ${completed ? 'goal-completed' : ''}">
+        <div class="goal-header">
+          <div class="goal-title">${goal.title}</div>
+          <button class="session-delete" onclick="deleteGoal(${goal.id})">
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
+        <div class="goal-progress-bar">
+          <div class="goal-progress-fill" style="width: ${progress}%"></div>
+        </div>
+        <div class="goal-stats">
+          <span>${Math.floor(progress)}% completado</span>
+          <span>${goal.description}</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+document.getElementById('addGoalBtn').addEventListener('click', () => {
+  const title = prompt('Nombre de la meta:');
+  if (!title) return;
+  
+  const type = confirm('¿Meta basada en sesiones? (Cancelar = basada en tiempo)') ? 'sessions' : 'duration';
+  let target, description;
+  
+  if (type === 'sessions') {
+    target = parseInt(prompt('¿Cuántas sesiones?', '10'));
+    description = `${target} sesiones`;
+  } else {
+    const hours = parseInt(prompt('¿Cuántas horas?', '5'));
+    target = hours * 3600000;
+    description = `${hours} horas`;
+  }
+  
+  if (!target) return;
+  
+  const goal = {
+    id: Date.now(),
+    username: currentUser.username,
+    title,
+    type,
+    target,
+    description,
+    createdAt: new Date().toISOString()
+  };
+  
+  const goals = JSON.parse(localStorage.getItem('goals') || '[]');
+  goals.push(goal);
+  localStorage.setItem('goals', JSON.stringify(goals));
+  
+  loadGoals();
+  updateStats();
+});
+
+function deleteGoal(id) {
+  if (!confirm('¿Eliminar esta meta?')) return;
+  
+  let goals = JSON.parse(localStorage.getItem('goals') || '[]');
+  goals = goals.filter(g => g.id !== id);
+  localStorage.setItem('goals', JSON.stringify(goals));
+  
+  loadGoals();
+  updateStats();
+}
+
+// ==================== ESTADÍSTICAS ====================
+function updateStats() {
+  const sessions = JSON.parse(localStorage.getItem('sessions') || '[]');
+  const userSessions = sessions.filter(s => s.username === currentUser.username);
+  const goals = JSON.parse(localStorage.getItem('goals') || '[]');
+  const userGoals = goals.filter(g => g.username === currentUser.username);
+  
+  // Total sesiones
+  document.getElementById('totalSessions').textContent = userSessions.length;
+  
+  // Tiempo total
+  const totalTime = userSessions.reduce((sum, s) => sum + s.duration, 0);
+  const hours = Math.floor(totalTime / 3600000);
+  document.getElementById('totalTime').textContent = hours > 0 ? `${hours}h` : formatDuration(totalTime);
+  
+  // Racha
+  const streak = calculateStreak(userSessions);
+  document.getElementById('streak').textContent = `${streak} días`;
+  
+  // Metas completadas
+  let goalsCompleted = 0;
+  userGoals.forEach(goal => {
+    let progress = 0;
+    if (goal.type === 'sessions') {
+      progress = (userSessions.length / goal.target) * 100;
+    } else {
+      progress = (totalTime / goal.target) * 100;
+    }
+    if (progress >= 100) goalsCompleted++;
+  });
+  document.getElementById('goalsCompleted').textContent = goalsCompleted;
+}
+
+function calculateStreak(sessions) {
+  if (sessions.length === 0) return 0;
+  
+  const dates = sessions
+    .map(s => new Date(s.date).toDateString())
+    .filter((v, i, a) => a.indexOf(v) === i)
+    .sort((a, b) => new Date(b) - new Date(a));
+  
+  let streak = 0;
+  let currentDate = new Date();
+  
+  for (let date of dates) {
+    const sessionDate = new Date(date);
+    const diffDays = Math.floor((currentDate - sessionDate) / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === streak) {
+      streak++;
+      currentDate = sessionDate;
+    } else {
+      break;
+    }
+  }
+  
+  return streak;
+}
+
+// ==================== TABS ====================
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const tab = btn.dataset.tab;
+    
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    
+    btn.classList.add('active');
+    document.getElementById(tab + 'Tab').classList.add('active');
+  });
+});
+
 // ==================== MODO Y TEMA ====================
 function switchMode(newMode) {
   if (isRunning) {
@@ -292,7 +659,6 @@ function switchMode(newMode) {
   if (mode === 'timer') {
     timerSetup.classList.add('active');
     lapBtn.style.display = 'none';
-    // Configurar tiempo inicial del temporizador
     const hours = parseInt(hoursInput.value) || 0;
     const minutes = parseInt(minutesInput.value) || 0;
     const seconds = parseInt(secondsInput.value) || 0;
@@ -307,8 +673,6 @@ function switchMode(newMode) {
     timerSetup.classList.remove('active');
     lapBtn.style.display = 'flex';
   }
-  
-  saveState();
 }
 
 function toggleTheme() {
@@ -317,50 +681,6 @@ function toggleTheme() {
   
   document.documentElement.setAttribute('data-theme', newTheme);
   themeToggle.querySelector('i').className = newTheme === 'light' ? 'fas fa-sun' : 'fas fa-moon';
-  
-  // NO guardar el tema para que siempre inicie en oscuro
-  // localStorage.setItem('theme', newTheme);
-}
-
-// ==================== PERSISTENCIA ====================
-function saveState() {
-  const state = {
-    mode,
-    elapsed,
-    isRunning,
-    laps,
-    timerDuration,
-    timerRemaining,
-    hours: hoursInput.value,
-    minutes: minutesInput.value,
-    seconds: secondsInput.value
-  };
-  localStorage.setItem('timerState', JSON.stringify(state));
-}
-
-function loadState() {
-  const saved = localStorage.getItem('timerState');
-  if (!saved) return;
-  
-  try {
-    const state = JSON.parse(saved);
-    
-    // NO cargar el modo, siempre iniciar en cronómetro
-    // mode = state.mode || 'stopwatch';
-    
-    // NO cargar estados guardados para empezar limpio
-    elapsed = 0;
-    laps = [];
-    timerDuration = 0;
-    timerRemaining = 0;
-    
-    if (state.hours) hoursInput.value = state.hours;
-    if (state.minutes) minutesInput.value = state.minutes;
-    if (state.seconds) secondsInput.value = state.seconds;
-    
-  } catch (e) {
-    console.error('Error loading state:', e);
-  }
 }
 
 // ==================== EVENT LISTENERS ====================
@@ -392,7 +712,6 @@ presetButtons.forEach(btn => {
   });
 });
 
-// Validación de inputs
 [hoursInput, minutesInput, secondsInput].forEach(input => {
   input.addEventListener('input', (e) => {
     const max = parseInt(e.target.max);
@@ -404,7 +723,6 @@ presetButtons.forEach(btn => {
     }
   });
   
-  // Actualizar el display cuando cambian los inputs
   input.addEventListener('change', () => {
     if (mode === 'timer' && !isRunning) {
       const hours = parseInt(hoursInput.value) || 0;
@@ -421,7 +739,6 @@ presetButtons.forEach(btn => {
   });
 });
 
-// Atajos de teclado
 document.addEventListener('keydown', (e) => {
   if (e.code === 'Space') {
     e.preventDefault();
@@ -435,7 +752,6 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
-// Animación de flash para el temporizador
 const style = document.createElement('style');
 style.textContent = `
   @keyframes flash {
@@ -445,53 +761,18 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-// ==================== REGISTRO DEL SERVICE WORKER (PWA) ====================
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js')
-      .then(registration => {
-        console.log('✅ Service Worker registrado:', registration.scope);
-      })
-      .catch(error => {
-        console.log('❌ Error al registrar Service Worker:', error);
-      });
-  });
-}
-
-// ==================== INSTALACIÓN PWA ====================
-let deferredPrompt;
-
-window.addEventListener('beforeinstallprompt', (e) => {
-  e.preventDefault();
-  deferredPrompt = e;
-  
-  // Mostrar botón de instalación personalizado (opcional)
-  console.log('📱 App lista para instalar');
-});
-
-window.addEventListener('appinstalled', () => {
-  console.log('✅ PWA instalada correctamente');
-  deferredPrompt = null;
-});
-
 // ==================== INICIALIZACIÓN ====================
-
-// Cargar estado guardado (solo inputs)
-loadState();
-
-// Siempre iniciar en tema oscuro DESPUÉS de cargar estado
 document.documentElement.setAttribute('data-theme', 'dark');
 themeToggle.querySelector('i').className = 'fas fa-moon';
 
-// Solicitar permiso para notificaciones
 if ('Notification' in window && Notification.permission === 'default') {
   Notification.requestPermission();
 }
 
-// Deshabilitar botón de vuelta inicialmente
 lapBtn.disabled = true;
 
-console.log('🚀 ProTimer cargado correctamente');
-console.log('⌨️ Atajos: Espacio (Iniciar/Pausar), R (Reiniciar), L (Vuelta)');
-console.log('📱 Instala la app para usarla offline');
+// Iniciar sistema de autenticación
+initAuth();
 
+console.log('🚀 ProTimer Pro cargado correctamente');
+console.log('⌨️ Atajos: Espacio (Iniciar/Pausar), R (Reiniciar), L (Vuelta)');
