@@ -277,7 +277,10 @@ function updateLapStats() {
 
 // ==================== MODO Y TEMA ====================
 function switchMode(newMode) {
-  if (isRunning) return; // No cambiar modo mientras está corriendo
+  if (isRunning) {
+    alert('Detén el cronómetro antes de cambiar de modo');
+    return;
+  }
   
   mode = newMode;
   reset();
@@ -289,6 +292,17 @@ function switchMode(newMode) {
   if (mode === 'timer') {
     timerSetup.classList.add('active');
     lapBtn.style.display = 'none';
+    // Configurar tiempo inicial del temporizador
+    const hours = parseInt(hoursInput.value) || 0;
+    const minutes = parseInt(minutesInput.value) || 0;
+    const seconds = parseInt(secondsInput.value) || 0;
+    timerDuration = (hours * 3600 + minutes * 60 + seconds) * 1000;
+    timerRemaining = timerDuration;
+    
+    if (timerRemaining > 0) {
+      timeEl.textContent = formatTime(timerRemaining);
+      millisecondsEl.textContent = formatMilliseconds(timerRemaining);
+    }
   } else {
     timerSetup.classList.remove('active');
     lapBtn.style.display = 'flex';
@@ -304,7 +318,8 @@ function toggleTheme() {
   document.documentElement.setAttribute('data-theme', newTheme);
   themeToggle.querySelector('i').className = newTheme === 'light' ? 'fas fa-sun' : 'fas fa-moon';
   
-  localStorage.setItem('theme', newTheme);
+  // NO guardar el tema para que siempre inicie en oscuro
+  // localStorage.setItem('theme', newTheme);
 }
 
 // ==================== PERSISTENCIA ====================
@@ -400,6 +415,22 @@ presetButtons.forEach(btn => {
       e.target.value = 0;
     }
   });
+  
+  // Actualizar el display cuando cambian los inputs
+  input.addEventListener('change', () => {
+    if (mode === 'timer' && !isRunning) {
+      const hours = parseInt(hoursInput.value) || 0;
+      const minutes = parseInt(minutesInput.value) || 0;
+      const seconds = parseInt(secondsInput.value) || 0;
+      timerDuration = (hours * 3600 + minutes * 60 + seconds) * 1000;
+      timerRemaining = timerDuration;
+      
+      if (timerRemaining > 0) {
+        timeEl.textContent = formatTime(timerRemaining);
+        millisecondsEl.textContent = formatMilliseconds(timerRemaining);
+      }
+    }
+  });
 });
 
 // Atajos de teclado
@@ -456,12 +487,9 @@ window.addEventListener('appinstalled', () => {
 });
 
 // ==================== INICIALIZACIÓN ====================
-// Cargar tema guardado
-const savedTheme = localStorage.getItem('theme');
-if (savedTheme) {
-  document.documentElement.setAttribute('data-theme', savedTheme);
-  themeToggle.querySelector('i').className = savedTheme === 'light' ? 'fas fa-sun' : 'fas fa-moon';
-}
+// Siempre iniciar en tema oscuro
+document.documentElement.setAttribute('data-theme', 'dark');
+themeToggle.querySelector('i').className = 'fas fa-moon';
 
 // Solicitar permiso para notificaciones
 if ('Notification' in window && Notification.permission === 'default') {
