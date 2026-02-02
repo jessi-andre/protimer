@@ -29,6 +29,8 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
 }
 
 body {
@@ -42,6 +44,7 @@ body {
   overflow-x: hidden;
   position: relative;
   transition: background 0.3s ease;
+  touch-action: manipulation;
 }
 
 /* Partículas animadas de fondo */
@@ -1097,22 +1100,10 @@ body {
 }
 
 /* Responsive */
-@media (max-width: 480px) {
+@media (max-width: 768px) {
   .app {
-    padding: 24px 16px;
-  }
-
-  .controls {
-    flex-direction: column;
-  }
-
-  .control-btn {
-    width: 100%;
-  }
-
-  .laps-stats {
-    flex-direction: column;
-    gap: 8px;
+    padding: 20px 12px;
+    max-width: 100%;
   }
 
   .header {
@@ -1120,11 +1111,336 @@ body {
     gap: 12px;
   }
 
+  .user-info {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .mode-toggle {
+    width: 100%;
+  }
+
+  .mode-btn {
+    font-size: 13px;
+    padding: 10px 12px;
+  }
+
+  .time {
+    font-size: 56px;
+  }
+
+  .milliseconds {
+    font-size: 28px;
+  }
+
+  .progress-ring svg {
+    width: 280px;
+    height: 280px;
+  }
+
+  .time-inputs {
+    gap: 4px;
+  }
+
+  .input-group input {
+    width: 70px;
+    font-size: 24px;
+    padding: 12px 8px;
+  }
+
+  .separator {
+    font-size: 24px;
+    margin: 0 2px;
+  }
+
+  .controls {
+    gap: 8px;
+  }
+
+  .control-btn {
+    padding: 16px;
+  }
+
+  .control-btn i {
+    font-size: 20px;
+  }
+
+  .control-btn span {
+    font-size: 11px;
+  }
+
+  .laps-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .laps-stats {
+    width: 100%;
+    justify-content: space-around;
+  }
+
+  .tabs-nav {
+    padding: 3px;
+  }
+
+  .tab-btn {
+    padding: 12px 8px;
+  }
+
+  .tab-btn i {
+    font-size: 18px;
+  }
+
+  .tab-btn span {
+    font-size: 10px;
+  }
+
   .stats-grid {
     grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .stat-card {
+    padding: 16px;
+  }
+
+  .stat-card i {
+    font-size: 28px;
+  }
+
+  .stat-value {
+    font-size: 20px;
+  }
+
+  .modal {
+    width: 95%;
+    padding: 24px;
+  }
+
+  .modal-header h2 {
+    font-size: 20px;
+  }
+
+  .session-details {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .goal-completed::after {
+    position: static;
+    display: block;
+    margin-top: 8px;
+    text-align: center;
+  }
+}
+
+@media (max-width: 400px) {
+  .app {
+    padding: 16px 8px;
+  }
+
+  .time {
+    font-size: 48px;
+  }
+
+  .milliseconds {
+    font-size: 24px;
+  }
+
+  .progress-ring svg {
+    width: 240px;
+    height: 240px;
+  }
+
+  .input-group input {
+    width: 60px;
+    font-size: 20px;
+    padding: 10px 6px;
+  }
+
+  .input-group label {
+    font-size: 10px;
+  }
+
+  .separator {
+    font-size: 20px;
+  }
+
+  .control-btn {
+    padding: 14px;
+  }
+
+  .control-btn i {
+    font-size: 18px;
+  }
+
+  .control-btn span {
+    font-size: 10px;
+  }
+
+  .lap-item {
+    padding: 12px;
+  }
+
+  .lap-number {
+    font-size: 13px;
+  }
+
+  .lap-time {
+    font-size: 14px;
+  }
+
+  .lap-total {
+    font-size: 11px;
+  }
+
+  .session-item {
+    padding: 12px;
+  }
+
+  .session-title {
+    font-size: 14px;
+  }
+
+  .session-date {
+    font-size: 11px;
+  }
+
+  .session-details {
+    font-size: 12px;
+  }
+
+  .goal-item {
+    padding: 12px;
+  }
+
+  .goal-title {
+    font-size: 14px;
+  }
+
+  .stat-card {
+    padding: 14px;
+  }
+
+  .stat-card i {
+    font-size: 24px;
+  }
+
+  .stat-value {
+    font-size: 18px;
+  }
+
+  .stat-label {
+    font-size: 11px;
+  }
+
+  .modal {
+    width: 98%;
+    padding: 20px;
+  }
+
+  .form-group input,
+  .form-group textarea {
+    padding: 12px;
+    font-size: 14px;
+  }
+
+  .btn-primary {
+    padding: 14px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 360px) {
+  .time {
+    font-size: 42px;
+  }
+
+  .milliseconds {
+    font-size: 20px;
+  }
+
+  .mode-btn span {
+    display: none;
   }
 
   .tab-btn span {
     display: none;
+  }
+
+  .input-group input {
+    width: 55px;
+    font-size: 18px;
+  }
+}
+
+/* Orientación Landscape en móviles */
+@media (max-height: 600px) and (orientation: landscape) {
+  .app {
+    padding: 12px;
+  }
+
+  .header {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .time {
+    font-size: 36px;
+  }
+
+  .milliseconds {
+    font-size: 18px;
+  }
+
+  .progress-ring {
+    display: none;
+  }
+
+  .controls {
+    flex-direction: row;
+    gap: 8px;
+  }
+
+  .control-btn {
+    flex: 1;
+    min-width: auto;
+  }
+
+  .laps-section {
+    max-height: 200px;
+  }
+
+  .tabs-section {
+    margin-top: 16px;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Dark mode forzado para OLED */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-primary: #000000;
+  }
+}
+
+/* Mejoras para pantallas táctiles */
+@media (hover: none) and (pointer: coarse) {
+  button,
+  .control-btn,
+  .tab-btn,
+  .mode-btn {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  input,
+  textarea {
+    font-size: 16px !important; /* Evita zoom en iOS */
   }
 }
